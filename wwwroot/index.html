@@ -1,0 +1,313 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <TITLE>Flights Control</TITLE>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="photos/app_icon.png">
+    <link rel="stylesheet" href="drop.css">
+    <link rel="stylesheet" type="text/css" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial;
+            padding: 10px;
+            background: #f1f1f1;
+        }
+
+        /* Header/Blog Title */
+        .mainHeader {
+            padding: 30px;
+            text-align: center;
+            background: white;
+        }
+
+            .mainHeader h1 {
+                font-size: 50px;
+            }
+
+
+        /* Create two unequal columns that floats next to each other */
+        /* Left column */
+        .leftArea {
+            float: left;
+            width: 75%;
+        }
+
+
+        /* Right column */
+        .rightArea {
+            float: left;
+            width: 25%;
+            background-color: #f1f1f1;
+            padding-left: 20px;
+        }
+
+        /* Fake image */
+        .fakeimg {
+            background-color: #aaa;
+            width: 100%;
+            padding: 20px;
+        }
+
+        /* Add a card effect for articles */
+        .card {
+            background-color: white;
+            padding: 20px;
+            margin-top: 0px;
+        }
+
+        /* Clear floats after the columns */
+        .mainArea:after {
+            content: "";
+            display: table;
+            clear: both;
+        }
+
+        /* Footer */
+        .footer {
+            padding: 5px;
+            text-align: left;
+            background: #ddd;
+            margin-top: 20px;
+        }
+
+
+        #map {
+            height: 600px;
+            width: 100%;
+        }
+    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+</head>
+<body style="background-color: cornflowerblue;">
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"
+            integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0="
+            crossorigin="anonymous">
+    </script>
+
+    <div id="mainHeader">
+        <div style="text-align:center " class="header">
+            <h1>Flights Control</h1>
+        </div>
+    </div>
+
+    <!-- The main area of the page-->
+    <div class="mainArea">
+        <!-- The left area of the screen-->
+        <div class="leftArea">
+
+            <!-- THE MAP CARD-->
+            <div class="card">
+                <h1 style="text-align: center">Map</h1>
+                <div id="map">
+                    <script async defer
+                            src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA0MdOxn6PqHrjcgtpxu3dqeAbKk-WVnTc&callback=initMap">
+                    </script>
+                </div>
+            </div>
+
+            <!--The Flight Details under the Map CARD-->
+            <div class="card">
+                <h2 style="text-align: center">Flight Details</h2>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Company</th>
+                            <th>Passengers</th>
+                            <th>Take Off</th>
+                            <th>Landing Time</th>
+                            <th>Starting Point</th>
+                            <th>Ending Point</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td id="Company"></td>
+                            <td id="Passengers"></td>
+                            <td id="TakeOff"></td>
+                            <td id="Landing"></td>
+                            <td id="Start"></td>
+                            <td id="End"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- The Right area: Date & Time, Flights & External Flights-->
+        <div class="rightArea">
+
+            <div class="card">
+                <h1 style="text-align: center">Current Date & Time</h1>
+                <h2 id="time" style="text-align:center"></h2>
+            </div>
+            <div class="card">
+                <h3>My Flights</h3>
+                <!--
+        <div id="flightTable" style="width:100%">
+            <h4>Flight ID            Company Name</h4>
+
+        </div>
+        -->
+                <table id="flightTable" style="width:100%">
+                    <tr>
+                        <th>Flight ID</th>
+                        <th>Company</th>
+                        <th></th>
+                        <th></th>
+                    </tr>
+
+
+                </table>
+
+            </div>
+
+            <div class="card">
+                <h3>External Flights</h3>
+
+                <table id="extFlightTable" style="width:100%">
+                    <tr>
+                        <th>Flight ID</th>
+                        <th>Company Name</th>
+                    </tr>
+
+
+
+
+                </table>
+
+            </div>
+
+            <div class=" dragAndDrop">
+                <h3>dragAndDrop</h3>
+                <form id="dropFileForm" action="api/FlightPlan" method="POST" onsubmit="uploadFiles(event)">
+                    <input type="file" name="files[]" id="fileInput" multiple onchange="addFiles(event)">
+
+                    <label for="fileInput" id="fileLabel" ondragover="overrideDefault(event);fileHover();" ondragenter="overrideDefault(event);fileHover();" ondragleave="overrideDefault(event);fileHoverEnd();" ondrop="overrideDefault(event);fileHoverEnd();
+        addFiles(event);">
+                        <i class="fa fa-download fa-5x"></i>
+                        <br>
+                        <span id="fileLabelText">
+                            Choose a file or drag it here
+                        </span>
+                        <br>
+                        <span id="uploadStatus"></span>
+                    </label>
+
+                    <input type="submit" value="Upload" class="uploadButton">
+                </form>
+
+                <script>
+                    var dropFileForm = document.getElementById("dropFileForm");
+                    var fileLabelText = document.getElementById("fileLabelText");
+                    var uploadStatus = document.getElementById("uploadStatus");
+                    var fileInput = document.getElementById("fileInput");
+                    var droppedFiles;
+
+                    function overrideDefault(event) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+
+                    function fileHover() {
+                        dropFileForm.classList.add("fileHover");
+                    }
+
+                    function fileHoverEnd() {
+                        dropFileForm.classList.remove("fileHover");
+                    }
+
+                    function addFiles(event) {
+                        droppedFiles = event.target.files || event.dataTransfer.files;
+                        showFiles(droppedFiles);
+                    }
+
+                    function showFiles(files) {
+                        if (files.length > 1) {
+                            fileLabelText.innerText = files.length + " files selected";
+                        } else {
+                            fileLabelText.innerText = files[0].name;
+                        }
+                    }
+
+                    function uploadFiles(event) {
+                        event.preventDefault();
+                        changeStatus("Uploading...");
+
+                        var formData = new FormData();
+
+                        for (var i = 0, file; (file = droppedFiles[i]); i++) {
+                            formData.append(fileInput.name, file, file.name);
+                        }
+
+                        var xhr = new XMLHttpRequest();
+
+                        xhr.onreadystatechange = function (data) {
+                            //handle server response and change status of
+                            //upload process via changeStatus(text)
+
+                            changeStatus("finish");
+
+                        };
+
+                        /*
+                        var theUrl = "/api/FlightPlan";
+                        xmlhttp.open("POST", theUrl);
+                        xmlhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+                        //xmlhttp.send(JSON.stringify(FormData));
+                        console.log(this.responseText);
+                        xmlhttp.send(FormData);
+                        console.log("hi");*/
+
+
+
+                        xhr.open("POST", "api/FlightPlan", true);
+                        console.log(formData);
+                        console.log("hi")
+                        xhr.send(formData);
+                    }
+
+                    function changeStatus(text) {
+                        uploadStatus.innerText = text;
+                    }
+
+
+
+                </script>
+
+
+            </div>
+            <input type="file" id="selectFiles" value="Import" /><br />
+            <button id="import">Import</button>
+            <textarea id="result"></textarea>
+
+        </div>
+
+    </div>
+
+    <div class="footer">
+        <h4>Flights Control ®</h4>
+        <h6>Devoloped By Liad Cohen and Yaron Sofer </h6>
+    </div>
+
+
+
+    <script src="js/update.js">
+    </script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+</body>
+
+</html>
+

@@ -1,4 +1,6 @@
-﻿// Map pin object
+﻿
+
+// Map pin object
 var mark = function (pin, id) {
     // The marker object
     this.pin = pin;
@@ -23,7 +25,7 @@ var flights = {
 };
 
 // Flight object
-var flight = function (flight_id, longitude, latitude, passengers, final_location, starting_datails, initial_location, landing_details, company_name, date_time, is_external) {
+function flight (flight_id, longitude, latitude, passengers, final_location, starting_datails, initial_location, landing_details, company_name, date_time, is_external) {
     this.flight_id = flight_id;
     this.longitude = longitude;
     this.latitude = latitude;
@@ -35,7 +37,7 @@ var flight = function (flight_id, longitude, latitude, passengers, final_locatio
     this.company_name = company_name;
     this.date_time = date_time;
     this.is_external = is_external;
-    return this;
+    //return this;
 };
 
 
@@ -51,19 +53,32 @@ function initMap() {
     map = new google.maps.Map(document.getElementById('map'), options);
 }
 
-flights.flightsArr = [];
+var flightsArr = [];
+var currentFlight;
 // Sampling the whole flights
 var xhttp = new XMLHttpRequest();
 xhttp.onreadystatechange = function () {
+    
     if (this.readyState == 4 && this.status == 200) {
-        
+
+        flightsArr = [];
         const words = this.responseText.replace("]", "").replace("[", "").concat(",").split("},");
         for (i = 0; i < words.length - 1; i++) {
             var obj = JSON.parse(words[i].concat('}'));
             // Store the current flight
-            var currentFlight = new flight(obj.flight_id, obj.longitude, obj.latitude, obj.passengers, obj.final_location ,obj.starting_datails ,obj.initial_location, obj.landing_details,
+            currentFlight = new flight(obj.flight_id, obj.longitude, obj.latitude, obj.passengers, obj.final_location, obj.starting_datails, obj.initial_location, obj.landing_details,
                 obj.company_name,
                 obj.date_time, obj.landing_time, obj.is_external);
+
+            console.log(words.length);
+            console.log("cur lat " + currentFlight.latitude);            
+            //console.log("cur lon " + currentFlight.longitude);
+            setFlightsTable(currentFlight);
+            flightsArr.push(currentFlight);
+            
+
+
+            /*
             var isExist = false;
             // Store the object in flights array
             for (var i = 0; i < flights.flightsArr.length; i++)
@@ -75,182 +90,276 @@ xhttp.onreadystatechange = function () {
             }
             if (!isExist) {
 
-               // flights.flightsArr.push(new flight(obj.flight_id, obj.longitude, obj.latitude, obj.passengers, obj.company_name,
-                //    obj.date_time, obj.landing_time, obj.is_external));
-                //console.log("Current Flight ID is " + currentFlight.flight_id);
-                flights.flightsArr.push(currentFlight);
-                setFlightsTable(currentFlight);
+                console.log("middle lat " + currentFlight.latitude);
+               flights.flightsArr.push(currentFlight);
+               setFlightsTable(currentFlight);
             }
 
         }
         
         if (flights.flightsArr.length != null) {
-            drawAirPlanes(flights.flightsArr);
-        }
 
+            console.log("new lat " + currentFlight.latitude);
+            drawAirPlanes(flights.flightsArr);
+        }*/
+
+        }
+        
+        drawAirPlanes(flightsArr);
     }
+    
 };
 
 setInterval(function () {
     // Set the current date time
+
+    var today = new Date();
+    var h = today.getHours();
+    if (h < 10) {
+        h = "0" + h;
+    }
+    var m = today.getMinutes();
+    if (m < 10) {
+        m = "0" + m;
+    }
+    var s = today.getSeconds();
+    if (s < 10) {
+        s = "0" + s;
+    }
+    var day = today.getDate();
+    if (day < 10) {
+        day = "0" + day;
+    }
+    var month = today.getMonth() + 1;
+    if (month < 10) {
+        month = "0" + month;
+    }
+    var year = today.getFullYear();
+
+   
+
+    var format = year + '-' + month + '-' + day + 'T' + h + ':' + m + ':' + s + 'Z';
+    
+
+
+
+    
     var d = new Date();
     var now = d.toLocaleString();
     document.getElementById("time").innerHTML = now;
-    var currentTime = new Date(new Date().toString().split('GMT')[0] + 'UTC').toISOString().split('.')[0] + "Z";
-    xhttp.open("GET", "/api/Flights?relative_to=".concat(currentTime), true);
+  
+   
+
+
+    let currentTime = new Date(new Date().toString()).toISOString().split(".")[0] + "Z";
+    xhttp.open("GET", "/api/Flights?relative_to=".concat(format.toString()), true);
     xhttp.send();
 }, 3000);
 
 
-document.getElementById('import').onclick = function () {
-    var files = document.getElementById('selectFiles').files;
-   //console.log(files);
-    if (files.length <= 0) {
-        return false;
-    }
 
-    var fr = new FileReader();
+function buttons(flight, i) {
+    document.getElementById('Company').innerHTML = flight[i].company_name;
+    document.getElementById('Passengers').innerHTML = flight[i].passengers;
+    document.getElementById('TakeOff').innerHTML = flight[i].starting_datails;
+    document.getElementById('Landing').innerHTML = flight[i].landing_details;
+    document.getElementById('Start').innerHTML = flight[i].initial_location;
+    document.getElementById('End').innerHTML = flight[i].final_location;
 
-    fr.onload = function (e) {
-        console.log(e);
-        var result = JSON.parse(e.target.result);
-        //console.log(result);
-        var formatted = JSON.stringify(result, null, 2);
-        document.getElementById('result').value = formatted;
-    }
-
-    var xhr = new XMLHttpRequest();
-    xhr.open('POST', 'api/FlightPlan', true);
-    var file = files.item(0);
-    var formData = new FormData();
-    formData.append('file', file);
-    xhr.send(formData);    
-    
-};
-
+    //removeDraw = drawLines(flight[i]));
+}
 
 
 // Fullfil the 'My Flights Table' accroding to the input.
 var row;
-function setFlightsTable(flight) {
-    var listFlight = document.getElementById('flightTable');
-    // Check if the current flight is already exists in the fligts table.
+let btn;
 
-    let tr = document.createElement("tr");
-    let th1 = document.createElement("th");
-    let th2 = document.createElement("th");
-    let th3 = document.createElement("th");
-    let th4 = document.createElement("th");
-    let li = document.createElement("div");
-    li.appendChild(document.createTextNode(flight.flight_id));
-    let li2 = document.createElement("div");
-    li2.appendChild(document.createTextNode(flight.company_name));
-    let btn = document.createElement("button");
-    btn.appendChild(document.createTextNode("press"));
-    btn.style.background = "#8FBC8F";
-    let btn2 = document.createElement("button");
-    btn2.appendChild(document.createTextNode("delete"));
-    btn2.style.background = "red";
-
-    th1.appendChild(li);
-    th2.appendChild(li2);
-    th3.appendChild(btn);
-    th4.appendChild(btn2)
-    tr.appendChild(th1);
-    tr.appendChild(th2);
-    tr.appendChild(th3);
-    tr.appendChild(th4);
-    listFlight.appendChild(tr);
-
-    var removeDraw;
-    btn.addEventListener('click', function () {
-        
-        document.getElementById('Company').innerHTML = flight.company_name;
-        document.getElementById('Passengers').innerHTML = flight.passengers;
-        document.getElementById('TakeOff').innerHTML = flight.starting_datails;
-        document.getElementById('Landing').innerHTML = flight.landing_details;
-        document.getElementById('Start').innerHTML = flight.initial_location;
-        document.getElementById('End').innerHTML = flight.final_location;
-       
-        removeDraw = drawLines(flight);
+var tableId = [];
+var mapOfPaths = new Map();
+var mapOfAirplane = new Map();
+var mapOfMyFlights = new Map();
 
 
-    })
+function updateStatus(flight) {
 
-    btn2.addEventListener('click', function () {
-        var row = btn2.parentNode.parentNode;
-        row.parentNode.removeChild(row);
-        document.getElementById('Company').innerHTML = "";
-        document.getElementById('Passengers').innerHTML = "";
-        document.getElementById('TakeOff').innerHTML = "";
-        document.getElementById('Landing').innerHTML = "";
-        document.getElementById('Start').innerHTML = "";
-        document.getElementById('End').innerHTML = "";
+    document.getElementById('Company').innerHTML = flight.company_name;
+    document.getElementById('Passengers').innerHTML = flight.passengers;
+    document.getElementById('TakeOff').innerHTML = flight.starting_datails;
+    document.getElementById('Landing').innerHTML = flight.landing_details;
+    document.getElementById('Start').innerHTML = flight.initial_location;
+    document.getElementById('End').innerHTML = flight.final_location;
 
-        removeDraw.setMap(null);
-        var xhttpDel = new XMLHttpRequest();
-        xhttpDel.open("DELETE", "/api/Flights/".concat(flight.flight_id), true);
-        xhttpDel.send();
+    var flightRow = mapOfMyFlights.get(flight.flight_id);
+    flightRow.style.backgroundColor = "blue";
+    var mark = mapOfAirplane.get(flight.flight_id);
+
+    //markers.markersArr[i].pin.setIcon('css/blueAP.png');
+
+    mark.setIcon('css/blueAP.png');
+
+    drawLines(flight);
 
 
-
-    })
 
 }
 
+function setFlightsTable(flight) {
+
+    var isExist = false;
+    for (var i = 0; i < tableId.length; i++) {
+        if (tableId[i] == flight.flight_id) {
+            isExist = true;
+            break;
+        }
+    }
+
+    if (!isExist) {
+        tableId.push(flight.flight_id);
+
+        var listFlight = document.getElementById('flightTable');
+        // Check if the current flight is already exists in the fligts table.
+
+        let tr = document.createElement("tr");
+        let th1 = document.createElement("th");
+        let th2 = document.createElement("th");
+        let th3 = document.createElement("th");
+        let th4 = document.createElement("th");
+        let li = document.createElement("div");
+        li.appendChild(document.createTextNode(flight.flight_id));
+        let li2 = document.createElement("div");
+        console.log(flight.company_name);
+        li2.appendChild(document.createTextNode(flight.company_name));
+        btn = document.createElement("button");
+        btn.appendChild(document.createTextNode("press"));
+        btn.style.background = "#8FBC8F";
+        let btn2 = document.createElement("button");
+        btn2.appendChild(document.createTextNode("delete"));
+        btn2.style.background = "red";
+
+        th1.appendChild(li);
+        th2.appendChild(li2);
+        th3.appendChild(btn);
+        th4.appendChild(btn2)
+        tr.appendChild(th1);
+        tr.appendChild(th2);
+        tr.appendChild(th3);
+        tr.appendChild(th4);
+        listFlight.appendChild(tr);
+        mapOfMyFlights.set(flight.flight_id, tr);
+        
+
+        btn.addEventListener('click', function () { updateStatus(flight); }); 
+       
+        /*
+        btn.addEventListener('click', function () {
 
 
+            document.getElementById('Company').innerHTML = flight.company_name;
+            document.getElementById('Passengers').innerHTML = flight.passengers;
+            document.getElementById('TakeOff').innerHTML = flight.starting_datails;
+            document.getElementById('Landing').innerHTML = flight.landing_details;
+            document.getElementById('Start').innerHTML = flight.initial_location;
+            document.getElementById('End').innerHTML = flight.final_location;
+
+            var flightRow = mapOfMyFlights.get(flight.flight_id);
+            flightRow.style.backgroundColor = "blue";
+            var mark = mapOfAirplane.get(flight.flight_id);
+
+            //markers.markersArr[i].pin.setIcon('css/blueAP.png');
+
+            mark.setIcon('css/blueAP.png');
+
+            drawLines(flight);
+
+
+        })*/
+
+        btn2.addEventListener('click', function () {
+            var row = btn2.parentNode.parentNode;
+            row.parentNode.removeChild(row);
+            document.getElementById('Company').innerHTML = "";
+            document.getElementById('Passengers').innerHTML = "";
+            document.getElementById('TakeOff').innerHTML = "";
+            document.getElementById('Landing').innerHTML = "";
+            document.getElementById('Start').innerHTML = "";
+            document.getElementById('End').innerHTML = "";
+
+            var removeDraw = mapOfPaths.get(flight.flight_id);
+            removeDraw.setMap(null);
+
+            var removeAirplane = mapOfAirplane.get(flight.flight_id);
+            removeAirplane.setMap(null);
+
+            var xhttpDel = new XMLHttpRequest();
+            xhttpDel.open("DELETE", "/api/Flights/".concat(flight.flight_id), true);
+            xhttpDel.send();
+
+        })
+    }
+}
 
 // Draw the airplanes icons according the Flights
 function drawAirPlanes(myFlights) {
     for (var j = 0; j < myFlights.length; j++) {
-        // add some markers to the map
-        var marker = new google.maps.Marker({
-            position: {
-                lat: myFlights[j].latitude,
-                lng: myFlights[j].longitude
-            },
-            icon: 'css/blackAP.jpeg'
-        });
-
-
         var duplicatePlane = 0;
         for (var k = 0; k < markers.markersArr.length; k++) {
             if (myFlights[j].flight_id == markers.markersArr[k].id) {
-                duplicatePlane = 1;
-                break;
+                duplicatePlane = 1;                
+                var changeMarker = markers.markersArr[k].pin;
+               
+                changeMarker.setPosition(new google.maps.LatLng(myFlights[j].latitude,
+                    myFlights[j].longitude));
             }
         }
         if (duplicatePlane == 1) {
             continue;
         }
 
+        // add some markers to the map
+        var marker = new google.maps.Marker({
+            position: {
+                lat: myFlights[j].latitude,
+                lng: myFlights[j].longitude,
+            },
+            icon: 'css/NotactiveAP.png'
+        });
+        //console.log("lat " + myFlights[j].latitude);
+
         // set the marker to our map.
+        mapOfAirplane.set(myFlights[j].flight_id, marker);
         marker.setMap(map);
         markers.markersArr.push(new mark(marker, myFlights[j].flight_id));
-
+        var f = myFlights[j];
         // when a click on a marker occured
+        marker.addListener('click', function () { updateStatus(f); }); 
+            
+        /*
         marker.addListener('click', function () {
             // set the marker icon to the following picture
             for (var i = 0; markers.markersArr.length; i++) {
                 // find the specific id airplane
                 if (this == markers.markersArr[i].pin) {
                     id = markers.markersArr[i].id;
-                    markers.markersArr[i].pin.setIcon('css/blueAP.jpeg');
+                    markers.markersArr[i].pin.setIcon('css/blueAP.png');
+
                     break;
                 }
-
             }
-        });
+
+            // click on the flights list from the right side;
+
+        });*/
     }
 
     map.addListener('click', function () {
         for (var i = 0; i < markers.markersArr.length; i++) {
             // set the image of the marker to NOT active AP of the marker
-            markers.markersArr[i].pin.setIcon('css/blackAP.jpeg');
+            markers.markersArr[i].pin.setIcon('css/NotactiveAP.png');
         }
     });
 }
+
+
 
 // Draw the segments lines according the Flight Plan
 
@@ -277,6 +386,7 @@ function drawLines(flight) {
                 strokeWeight: 2
             });
             flightPath.setMap(map);
+            mapOfPaths.set(flight.flight_id, flightPath);
         }
         return flightPath;
     }

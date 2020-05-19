@@ -68,7 +68,7 @@ xhttp.onreadystatechange = function () {
             // Store the current flight
             currentFlight = new flight(obj.flight_id, obj.longitude, obj.latitude, obj.passengers, obj.final_location, obj.starting_datails, obj.initial_location, obj.landing_details,
                 obj.company_name,
-                obj.date_time, obj.landing_time, obj.is_external);
+                obj.date_time, obj.is_external);
 
             console.log(words.length);
             console.log("cur lat " + currentFlight.latitude);            
@@ -152,7 +152,7 @@ setInterval(function () {
 
 
     let currentTime = new Date(new Date().toString()).toISOString().split(".")[0] + "Z";
-    xhttp.open("GET", "/api/Flights?relative_to=".concat(format.toString()), true);
+    xhttp.open("GET", "/api/Flights?relative_to=".concat(format.toString()) + "&sync_all", true);
     xhttp.send();
 }, 3000);
 
@@ -206,6 +206,15 @@ function updateStatus(flight) {
 }
 
 function clickOnMap(flight) {
+
+    for (var i = 0; i < tableId.length; i++) {
+        if (flight.flight_id != tableId[i]) {
+            var p = mapOfPaths.get(tableId[i]);
+            if (p != null) {
+                p.setMap(null);
+            }
+        }
+    }
     removeDetails(flight);
     var flightRow = mapOfMyFlights.get(flight.flight_id);
     flightRow.style.backgroundColor = "";
@@ -253,9 +262,18 @@ function setFlightsTable(flight) {
     if (!isExist) {
         tableId.push(flight.flight_id);
 
-        var listFlight = document.getElementById('flightTable');
-        // Check if the current flight is already exists in the fligts table.
+        var listFlight;
+        
+        if (flight.is_external == false) {
+            listFlight = document.getElementById('flightTable');
+        }
+        else {
+            listFlight = document.getElementById('extFlightTable');
+        }
 
+        
+        // Check if the current flight is already exists in the fligts table.
+        let btn2;
         let tr = document.createElement("tr");
         let th1 = document.createElement("th");
         let th2 = document.createElement("th");
@@ -269,14 +287,20 @@ function setFlightsTable(flight) {
         btn = document.createElement("button");
         btn.appendChild(document.createTextNode("press"));
         btn.style.background = "#8FBC8F";
-        let btn2 = document.createElement("button");
-        btn2.appendChild(document.createTextNode("delete"));
-        btn2.style.background = "red";
+        if (flight.is_external == false) {
+            btn2 = document.createElement("button");
+            console.log("bool1 is " + flight.is_external);
+            btn2.appendChild(document.createTextNode("delete"));
+            btn2.style.background = "red";
+        }
+        console.log("bool2 is " + flight.is_external);
 
         th1.appendChild(li);
         th2.appendChild(li2);
         th3.appendChild(btn);
-        th4.appendChild(btn2)
+        if (flight.is_external == false) {
+            th4.appendChild(btn2)            
+        }
         tr.appendChild(th1);
         tr.appendChild(th2);
         tr.appendChild(th3);
@@ -287,27 +311,28 @@ function setFlightsTable(flight) {
 
         btn.addEventListener('click', function () { updateStatus(flight); }); 
        
+        if (flight.is_external == false) {
+            btn2.addEventListener('click', function () {
 
-        btn2.addEventListener('click', function () {
+                if (mapOfMyFlights.get(flight.flight_id).style.backgroundColor == "blue") {
+                    clickOnMap(flight);
+                }
+                else {
+                    var row = btn2.parentNode.parentNode;
+                    row.parentNode.removeChild(row);
 
-            if (mapOfMyFlights.get(flight.flight_id).style.backgroundColor == "blue") {
-                clickOnMap(flight);
-            }
-            else {
-            var row = btn2.parentNode.parentNode;
-            row.parentNode.removeChild(row);
+                    removeDetails(flight);
 
-            removeDetails(flight);
+                    var removeAirplane = mapOfAirplane.get(flight.flight_id);
+                    removeAirplane.setMap(null);
 
-            var removeAirplane = mapOfAirplane.get(flight.flight_id);
-            removeAirplane.setMap(null);
+                    var xhttpDel = new XMLHttpRequest();
+                    xhttpDel.open("DELETE", "/api/Flights/".concat(flight.flight_id), true);
+                    xhttpDel.send();
+                }
 
-            var xhttpDel = new XMLHttpRequest();
-            xhttpDel.open("DELETE", "/api/Flights/".concat(flight.flight_id), true);
-            xhttpDel.send();
+            })
         }
-
-        })
     }
 }
 

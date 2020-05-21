@@ -68,13 +68,26 @@ namespace FlightControlWeb.Controllers
             List<Flight> list = new List<Flight>();
             foreach (var keyValuePair in FlightsDic)
             {
+                Debug.WriteLine("landing is :: "+keyValuePair.Value.landing_time.ToString());
                 if (keyValuePair.Value.date_time <= dateTime &&
-                    keyValuePair.Value.landing_time >= dateTime &&
+                    keyValuePair.Value.landing_time > dateTime &&
                     keyValuePair.Value.is_external == false)
                 {
                     Interpolation(keyValuePair.Value, dateTime);
                     list.Add(keyValuePair.Value);
                 }
+
+                /*
+                else
+                {
+                    if (dateTime > keyValuePair.Value.landing_time
+                        && keyValuePair.Value.is_external == false)
+                    {
+                        Debug.WriteLine("delete now the filght becuse lt");
+                        DeleteFlight(keyValuePair.Value.flight_id);
+                        
+                    }
+                }*/
             }
 
             if (Request.QueryString.Value.Contains("sync_all"))

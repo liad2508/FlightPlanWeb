@@ -300,9 +300,16 @@ function btn2Remove(flight) {
         row.parentNode.removeChild(row);
     }*/
 
-    var butt = document.getElementById("btnid" + flight.flight_id);
-    var row = butt.parentNode.parentNode;
-    row.parentNode.removeChild(row);
+    if (flight.is_external == false) {
+        var butt = document.getElementById("btnid" + flight.flight_id);
+        var row = butt.parentNode.parentNode;
+        row.parentNode.removeChild(row);
+    }
+    else {
+        var butt = document.getElementById("btn" + flight.flight_id);
+        var row = butt.parentNode.parentNode;
+        row.parentNode.removeChild(row);
+    }
 
     
     if (mapOfMyFlights.get(flight.flight_id).style.backgroundColor == "blue") {
@@ -353,6 +360,7 @@ function setFlightsTable(flight) {
         console.log(flight.company_name);
         li2.appendChild(document.createTextNode(flight.company_name));
         btn = document.createElement("button");
+        btn.setAttribute("id", "btn" + flight.flight_id);
         btn.appendChild(document.createTextNode("press"));
         btn.style.background = "#8FBC8F";
         if (flight.is_external == false) {
